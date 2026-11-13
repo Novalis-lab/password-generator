@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>パスワード生成｜安全なパスワードをすぐ作る｜novalis</title>
+<meta name="description" content="長さや使う文字（大文字・小文字・数字・記号）を選ぶだけで、安全なパスワードをすぐ作る無料ツール。端末の中だけで作り、どこにも送りません。PINや記号なしにも対応。">
+<link rel="canonical" href="https://novalis-lab.github.io/password-generator/">
+<meta name="theme-color" content="#0b0b0d">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="novalis">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://novalis-lab.github.io/password-generator/">
+<meta property="og:title" content="パスワード生成｜安全なパスワードをすぐ作る">
+<meta property="og:description" content="長さと使う文字を選ぶだけで、安全なパスワードを作る無料ツール。端末の中だけで作り、どこにも送りません。">
+<meta property="og:image" content="https://novalis-lab.github.io/ogp.png?v=20261113">
+<meta name="twitter:card" content="summary_large_image">
+<!-- サイトのアイコン（novalis共通のロゴ） -->
+<link rel="icon" href="https://novalis-lab.github.io/icon.svg" type="image/svg+xml">
+<link rel="icon" href="https://novalis-lab.github.io/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="https://novalis-lab.github.io/apple-touch-icon.png">
+<!-- 全ページ共通（フォント：Zen Maru Gothic・Unbounded／角の丸み／ダブルタップ対策） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://novalis-lab.github.io/common.css?v=20261113d">
+<style>
+/* 色はトップページ（novalis）とそろえています */
+:root{
+  --bg:#0b0b0d; --card:rgba(255,255,255,.025);
+  --ink:#f2f0ea; --sub:#8b8a86; --dim:#5d5c58;
+  --line:rgba(255,255,255,.12); --field:#08080a;
+  --accent:#6f9fd4; --accent-rgb:111,159,212; --accent-ink:#0b0b0d;
+  --num:#8fb6e2; --sym:#ffd166;
+  --mono:"SF Mono","Menlo","Consolas","Roboto Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:dark}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.6;overflow-x:hidden}
+::selection{background:var(--accent);color:var(--accent-ink)}
+.hidden{display:none !important}
+
+/* ---------- 背景（縦のガイド線と斜めのライン：トップページと同じ） ---------- */
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bg-cols{position:absolute;inset:0;max-width:592px;margin:0 auto;border-left:1px solid rgba(255,255,255,.05);border-right:1px solid rgba(255,255,255,.05)}
+.bg-slash{position:absolute;top:-10%;right:-30%;width:90%;height:120%;
+  background:repeating-linear-gradient(-55deg,rgba(255,255,255,.04) 0 1px,transparent 1px 14px);
+  -webkit-mask-image:linear-gradient(200deg,#000 10%,transparent 55%);mask-image:linear-gradient(200deg,#000 10%,transparent 55%);
+  animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(-60px,24px)}}
+
+.wrap{max-width:592px;margin:0 auto;padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+
+/* ---------- 上のバーと見出し ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;border-bottom:1px solid var(--line);
+  font-family:var(--font-en);font-size:10px;font-weight:700;letter-spacing:.22em}
+.logo{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:800;font-size:13px;letter-spacing:.18em}
+.logo-mark{width:11px;height:11px;background:var(--accent);transform:rotate(45deg)}
+.logo:hover{color:var(--accent)}
+.topbar a.back{color:var(--sub);text-decoration:none}
+.topbar a.back:hover{color:var(--accent)}
+.kicker{display:flex;align-items:center;gap:12px;margin:30px 0 10px;font-family:var(--font-en);font-size:11px;font-weight:700;letter-spacing:.3em;color:var(--sub)}
+.kicker::before{content:"";width:32px;height:1px;background:var(--accent)}
+h1{font-size:clamp(30px,9vw,42px);margin:0;line-height:1.25;letter-spacing:.02em;font-weight:700}
+h1 .u-line{background:linear-gradient(transparent 84%,var(--accent) 84%,var(--accent) 94%,transparent 94%) no-repeat left/0% 100%;
+  animation:underline .9s cubic-bezier(.7,0,.2,1) .4s forwards}
+@keyframes underline{to{background-size:100% 100%}}
+.lead{color:var(--sub);font-size:.92rem;margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+
+/* ---------- カード（番号つき） ---------- */
+main{counter-reset:card}
+.card{counter-increment:card;margin-top:20px;padding:22px 18px 20px;background:var(--card);border:1px solid var(--line);border-top:1px solid var(--ink);border-radius:var(--radius,8px)}
+h2{margin:0 0 16px;font-size:20px;font-weight:700;letter-spacing:.02em}
+h2::before{content:counter(card,decimal-leading-zero) " /";display:block;margin-bottom:4px;font-family:var(--font-en);font-size:11px;font-weight:700;letter-spacing:.2em;color:var(--accent)}
+.lbl{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--sub)}
+.field+.field{margin-top:20px}
+.note{margin:10px 2px 0;font-size:12.5px;line-height:1.6;color:var(--sub)}
+
+/* ---------- できたパスワード ---------- */
+.result{position:relative;padding:20px 16px 16px;border-radius:var(--radius,8px);background:var(--field);border:1px solid rgba(var(--accent-rgb),.6);
+  box-shadow:0 0 20px 2px rgba(var(--accent-rgb),.3)}
+.pw{display:block;width:100%;margin:0;padding:0;border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;
+  font-family:var(--mono);font-size:clamp(20px,6.2vw,28px);font-weight:700;line-height:1.45;letter-spacing:.04em;word-break:break-all;user-select:all}
+.pw .n{color:var(--num)} .pw .s{color:var(--sym)}
+.pw-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 18px;border:0;border-radius:var(--radius,8px);font:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.btn.copy{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 16px 1px rgba(var(--accent-rgb),.45)}
+.btn.regen{background:transparent;border:1px solid var(--line);color:var(--ink);min-width:62px;font-size:22px}
+.btn.regen:hover{border-color:var(--accent)}
+.btn.regen.spin span{display:inline-block;animation:spin .45s cubic-bezier(.3,.7,.4,1)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.strength{margin-top:14px}
+.strength .meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.strength .meter i{height:6px;border-radius:3px;background:rgba(255,255,255,.1);transition:background .3s}
+.strength .txt{display:flex;justify-content:space-between;margin-top:6px;font-size:13px;font-weight:700}
+.strength .txt small{font-family:var(--font-en);font-size:10.5px;color:var(--sub)}
+.multi{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line)}
+.multi li{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.multi .pw{flex:1 1 auto;min-width:0;font-size:16px;font-weight:600}
+.multi .mini{flex:0 0 auto;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:var(--radius,8px);background:transparent;color:var(--sub);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.multi .mini:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- 設定 ---------- */
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.presets button{min-height:44px;padding:6px 14px;border:1px solid var(--line);border-radius:var(--radius,8px);background:transparent;color:var(--sub);font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.presets button:hover{color:var(--ink);border-color:var(--accent)}
+.presets button[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.len-row{display:grid;grid-template-columns:52px 1fr 52px;gap:10px;align-items:center}
+.len-row button{height:52px;border:1px solid var(--line);border-radius:var(--radius,8px);background:transparent;color:var(--ink);font-family:var(--font-en);font-size:22px;font-weight:700;cursor:pointer}
+.len-row button:hover{border-color:var(--accent)}
+.len-num{font-family:var(--font-en);font-size:22px;color:var(--ink);letter-spacing:0}
+input[type=range]{width:100%;height:44px;-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p,30%),rgba(255,255,255,.12) var(--p,30%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-11px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px rgba(var(--accent-rgb),.5)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.12)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:var(--ink)}
+.toggles{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.toggles li{border-bottom:1px solid var(--line)}
+.toggles label{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:6px 2px;cursor:pointer}
+.toggles .t-name{font-size:16px;font-weight:700}
+.toggles .t-name small{display:block;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--sub);letter-spacing:.04em}
+.switch{position:relative;flex:0 0 auto;width:52px;height:30px}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch i{position:absolute;inset:0;border-radius:999px;background:rgba(255,255,255,.14);transition:background .2s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked + i{background:var(--accent)}
+.switch input:checked + i::after{transform:translateX(22px)}
+.switch input:focus-visible + i{box-shadow:0 0 0 3px rgba(var(--accent-rgb),.5)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:var(--radius,8px);overflow:hidden}
+.seg button{min-height:50px;border:0;background:transparent;color:var(--sub);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.warn{margin-top:12px;padding:10px 14px;border-radius:var(--radius,8px);background:rgba(255,138,122,.12);border:1px solid rgba(255,138,122,.5);font-size:14px}
+
+/* コピーしたときのお知らせ */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:12px 20px;border-radius:var(--radius,8px);background:var(--ink);color:var(--bg);font-size:15px;font-weight:700;
+  box-shadow:0 10px 30px -10px rgba(0,0,0,.8);transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 斜めに流れる帯（トップページと同じ） ---------- */
+.ticker-wrap{position:relative;margin:36px -16px 0;padding:40px 0;overflow:hidden;overflow-x:clip;overflow-y:visible}
+.ticker{margin:0 -5%;padding:11px 0;background:var(--accent);color:var(--accent-ink);transform:rotate(-2.5deg);overflow:hidden;white-space:nowrap;
+  box-shadow:0 0 18px 2px rgba(var(--accent-rgb),.5),0 0 48px 6px rgba(var(--accent-rgb),.22);animation:glow-band 2.8s ease-in-out infinite}
+@keyframes glow-band{50%{box-shadow:0 0 26px 4px rgba(var(--accent-rgb),.7),0 0 70px 12px rgba(var(--accent-rgb),.32)}}
+.ticker-track{display:inline-flex;animation:marquee 26s linear infinite}
+.ticker-track span{display:inline-flex;align-items:center;gap:22px;padding-right:22px;font-family:var(--font-en);font-weight:800;font-size:15px;letter-spacing:.06em}
+.ticker-track span::after{content:"✦";font-size:.8em}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* ---------- フッター ---------- */
+footer{margin-top:32px;padding:16px;border:1px solid var(--line);border-radius:var(--radius,8px);color:var(--sub);font-size:14px;text-align:center}
+.more{position:relative;display:flex;align-items:center;justify-content:space-between;margin:28px auto 0;max-width:340px;min-height:58px;padding:0 22px 0 26px;
+  border-radius:var(--radius,8px);background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;text-decoration:none;overflow:hidden;isolation:isolate;
+  box-shadow:0 0 18px 2px rgba(var(--accent-rgb),.55),0 0 48px 6px rgba(var(--accent-rgb),.28);animation:glow-btn 2.8s ease-in-out infinite}
+@keyframes glow-btn{50%{box-shadow:0 0 26px 4px rgba(var(--accent-rgb),.75),0 0 70px 14px rgba(var(--accent-rgb),.38)}}
+.more::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--ink);transform:scaleX(0);transform-origin:right;transition:transform .4s cubic-bezier(.7,0,.2,1)}
+.more:hover::before{transform:scaleX(1);transform-origin:left}
+.site-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+  font-family:var(--font-en);font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--sub)}
+.site-bottom a{color:inherit;text-decoration:none}
+.site-bottom a:hover{color:var(--accent)}
+.footer-logo{margin:8px 0 0;font-family:var(--font-en);font-weight:800;font-size:clamp(44px,13.5vw,96px);line-height:.85;letter-spacing:-.04em;text-align:center;white-space:nowrap;
+  color:transparent;background:repeating-linear-gradient(-55deg,rgba(255,255,255,.2) 0 2px,transparent 2px 7px);-webkit-background-clip:text;background-clip:text;user-select:none}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  h1 .u-line{background-size:100% 100%}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><span class="bg-cols"></span><span class="bg-slash"></span></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="logo" href="https://novalis-lab.github.io/"><span class="logo-mark" aria-hidden="true"></span>NOVALIS</a>
+    <a class="back" href="https://novalis-lab.github.io/">← ALL TOOLS</a>
+  </div>
+  <header>
+    <p class="kicker">PASSWORD GENERATOR</p>
+    <h1><span class="u-line">パスワード</span>生成</h1>
+    <p class="lead">長さと使う文字をえらぶだけで、安全なパスワードをすぐ作ります。パスワードはこの端末の中だけで作り、どこにも送らず、保存もしません。</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>できたパスワード</h2>
+      <div class="result">
+        <button class="pw" id="pw" type="button" aria-label="パスワード（タップでコピー）"></button>
+        <div class="pw-actions">
+          <button class="btn copy" id="copy" type="button">コピーする</button>
+          <button class="btn regen" id="regen" type="button" aria-label="作り直す"><span aria-hidden="true">🔄</span></button>
+        </div>
+        <div class="strength" id="strength" aria-live="polite">
+          <div class="meter"><i></i><i></i><i></i><i></i></div>
+          <div class="txt"><span id="st-label"></span><small id="st-bits"></small></div>
+        </div>
+      </div>
+      <ul class="multi hidden" id="multi" aria-label="ほかの候補"></ul>
+      <p class="note">数字は<span style="color:var(--num)">青</span>、記号は<span style="color:var(--sym)">黄色</span>で表示しています。</p>
+    </section>
+
+    <section class="card">
+      <h2>設定</h2>
+      <div class="field">
+        <span class="lbl">よく使う設定</span>
+        <div class="presets" id="presets">
+          <button type="button" data-p="std">おすすめ（16文字）</button>
+          <button type="button" data-p="nosym">記号なし</button>
+          <button type="button" data-p="pin4">PIN 4桁</button>
+          <button type="button" data-p="pin6">PIN 6桁</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="len">長さ <span class="len-num" id="len-num"></span></label>
+        <div class="len-row">
+          <button type="button" id="len-minus" aria-label="1文字へらす">−</button>
+          <input type="range" id="len" min="4" max="64" step="1" value="16">
+          <button type="button" id="len-plus" aria-label="1文字ふやす">＋</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">使う文字</span>
+        <ul class="toggles">
+          <li><label><span class="t-name">大文字<small>ABC…XYZ</small></span><span class="switch"><input type="checkbox" id="upper"><i></i></span></label></li>
+          <li><label><span class="t-name">小文字<small>abc…xyz</small></span><span class="switch"><input type="checkbox" id="lower"><i></i></span></label></li>
+          <li><label><span class="t-name">数字<small>0123456789</small></span><span class="switch"><input type="checkbox" id="digit"><i></i></span></label></li>
+          <li><label><span class="t-name">記号<small id="sym-sample"></small></span><span class="switch"><input type="checkbox" id="symbol"><i></i></span></label></li>
+          <li><label><span class="t-name">見まちがえやすい文字を使わない<small>0 O o 1 l I | など</small></span><span class="switch"><input type="checkbox" id="noamb"><i></i></span></label></li>
+        </ul>
+        <div class="warn hidden" id="warn">使う文字を1つ以上えらんでください。</div>
+      </div>
+      <div class="field">
+        <span class="lbl">いちどに作る数</span>
+        <div class="seg" id="count">
+          <button type="button" data-v="1">1個</button>
+          <button type="button" data-v="5">5個</button>
+          <button type="button" data-v="10">10個</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="ticker-wrap" aria-hidden="true">
+    <div class="ticker"><div class="ticker-track">
+      <span>PASSWORD GENERATOR</span><span>SECURE</span><span>NOVALIS</span>
+      <span>PASSWORD GENERATOR</span><span>SECURE</span><span>NOVALIS</span>
+      <span>PASSWORD GENERATOR</span><span>SECURE</span><span>NOVALIS</span>
+    </div></div>
+  </div>
+
+  <footer>パスワードは使い回さず、サイトごとに別のものを使いましょう。パスワード管理アプリへの保存がおすすめです。</footer>
+  <a class="more" href="https://novalis-lab.github.io/">ほかのツールを見る<span aria-hidden="true">→</span></a>
+  <div class="site-bottom">
+    <a href="https://novalis-lab.github.io/">NOVALIS TOP</a>
+    <span>© NOVALIS</span>
+  </div>
+  <p class="footer-logo" aria-hidden="true">NOVALIS</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- 使う文字 ---------- */
+  var SETS = {
+    upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    lower: "abcdefghijklmnopqrstuvwxyz",
+    digit: "0123456789",
+    symbol: "!#$%&()*+-./:;<=>?@[]^_{|}~"    // 多くのサイトで使える記号（' " ` \ , と空白は入れない）
+  };
+  var AMBIGUOUS = "0Oo1lI|";                 // 見まちがえやすい文字
+
+  /* ---------- 安全な乱数（かたよりなし） ---------- */
+  // crypto.getRandomValues で 0〜n-1 の整数を選ぶ。端数が出る範囲は捨てて選び直す（剰余のかたよりを防ぐ）
+  function randInt(n) {
+    var buf = new Uint32Array(1), limit = Math.floor(0x100000000 / n) * n;
+    do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+    return buf[0] % n;
+  }
+  function pickFrom(s) { return s.charAt(randInt(s.length)); }
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = randInt(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* ---------- 設定（パスワード自体は保存しない） ---------- */
+  var state = { len: 16, upper: true, lower: true, digit: true, symbol: true, noamb: false, count: 1 };
+  try {
+    var saved = JSON.parse(localStorage.getItem("novalis-password-settings") || "{}");
+    Object.keys(state).forEach(function (k) { if (typeof saved[k] === typeof state[k]) state[k] = saved[k]; });
+  } catch (e) {}
+  function save() { try { localStorage.setItem("novalis-password-settings", JSON.stringify(state)); } catch (e) {} }
+
+  function sets() {
+    return ["upper", "lower", "digit", "symbol"].filter(function (k) { return state[k]; }).map(function (k) {
+      var s = SETS[k];
+      if (state.noamb) s = s.split("").filter(function (c) { return AMBIGUOUS.indexOf(c) < 0; }).join("");
+      return { k: k, chars: s };
+    });
+  }
+  function generate() {
+    var list = sets();
+    if (!list.length) return "";
+    var all = list.map(function (s) { return s.chars; }).join("");
+    var out = [];
+    // えらんだ種類の文字は、かならず1文字以上入れる（長さが足りるとき）
+    if (state.len >= list.length) list.forEach(function (s) { out.push(pickFrom(s.chars)); });
+    while (out.length < state.len) out.push(pickFrom(all));
+    return shuffle(out).join("");
+  }
+  function poolSize() { return sets().reduce(function (n, s) { return n + s.chars.length; }, 0); }
+
+  /* ---------- 表示 ---------- */
+  function colored(pw) {
+    return pw.split("").map(function (c) {
+      var e = c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c;
+      return /[0-9]/.test(c) ? '<span class="n">' + e + "</span>" : SETS.symbol.indexOf(c) >= 0 ? '<span class="s">' + e + "</span>" : e;
+    }).join("");
+  }
+  var current = [];
+  function render() {
+    var list = sets();
+    $("warn").classList.toggle("hidden", list.length > 0);
+    $("copy").disabled = !list.length;
+    current = [];
+    for (var i = 0; i < state.count; i++) current.push(generate());
+    $("pw").innerHTML = list.length ? colored(current[0]) : '<span style="color:var(--sub);font-size:16px">使う文字をえらんでください</span>';
+    $("multi").innerHTML = current.slice(1).map(function (p, i) {
+      return '<li><button class="pw" type="button" data-i="' + (i + 1) + '" aria-label="候補' + (i + 2) + '（タップでコピー）">' + colored(p) + '</button><button class="mini" type="button" data-i="' + (i + 1) + '">コピー</button></li>';
+    }).join("");
+    $("multi").classList.toggle("hidden", state.count <= 1);
+    // 強さの目安（使える文字の数と長さから計算した、当てずっぽうで当てるのに必要な手数の目安）
+    var bits = list.length ? state.len * Math.log2(poolSize()) : 0;
+    var lv = bits >= 100 ? 4 : bits >= 70 ? 3 : bits >= 45 ? 2 : bits > 0 ? 1 : 0;
+    var labels = ["", "弱い（短すぎる・文字の種類が少ない）", "ふつう", "強い", "とても強い"];
+    var colors = ["", "#ff8a7a", "#ffd166", "#9fd4b4", "#6f9fd4"];
+    [].forEach.call($("strength").querySelectorAll(".meter i"), function (el, i) { el.style.background = i < lv ? colors[lv] : ""; });
+    $("st-label").textContent = labels[lv];
+    $("st-label").style.color = colors[lv] || "";
+    $("st-bits").textContent = bits ? "約 " + Math.round(bits) + " ビット" : "";
+  }
+  function paintSettings() {
+    $("len").value = state.len;
+    $("len-num").textContent = state.len + " 文字";
+    $("len").style.setProperty("--p", ((state.len - 4) / 60 * 100) + "%");
+    ["upper", "lower", "digit", "symbol", "noamb"].forEach(function (k) { $(k).checked = state[k]; });
+    [].forEach.call($("count").children, function (b) { b.setAttribute("aria-pressed", +b.dataset.v === state.count ? "true" : "false"); });
+    var p = presetOf();
+    [].forEach.call($("presets").children, function (b) { b.setAttribute("aria-pressed", b.dataset.p === p ? "true" : "false"); });
+    $("sym-sample").textContent = SETS.symbol;
+  }
+
+  /* ---------- よく使う設定 ---------- */
+  var PRESETS = {
+    std:   { len: 16, upper: true,  lower: true,  digit: true, symbol: true,  noamb: false },
+    nosym: { len: 16, upper: true,  lower: true,  digit: true, symbol: false, noamb: true },
+    pin4:  { len: 4,  upper: false, lower: false, digit: true, symbol: false, noamb: false },
+    pin6:  { len: 6,  upper: false, lower: false, digit: true, symbol: false, noamb: false }
+  };
+  function presetOf() {
+    for (var k in PRESETS) {
+      var p = PRESETS[k], same = Object.keys(p).every(function (x) { return state[x] === p[x]; });
+      if (same) return k;
+    }
+    return "";
+  }
+  function update() { save(); paintSettings(); render(); }
+  $("presets").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-p]"); if (!b) return;
+    var p = PRESETS[b.dataset.p]; Object.keys(p).forEach(function (k) { state[k] = p[k]; }); update();
+  });
+  $("len").addEventListener("input", function () { state.len = +this.value; update(); });
+  $("len-minus").addEventListener("click", function () { state.len = Math.max(4, state.len - 1); update(); });
+  $("len-plus").addEventListener("click", function () { state.len = Math.min(64, state.len + 1); update(); });
+  ["upper", "lower", "digit", "symbol", "noamb"].forEach(function (k) { $(k).addEventListener("change", function () { state[k] = this.checked; update(); }); });
+  $("count").addEventListener("click", function (e) { var b = e.target.closest("button[data-v]"); if (!b) return; state.count = +b.dataset.v; update(); });
+
+  /* ---------- 作り直す・コピー ---------- */
+  $("regen").addEventListener("click", function () {
+    var r = $("regen"); r.classList.remove("spin"); void r.offsetWidth; r.classList.add("spin"); render();
+  });
+  var toastTimer;
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1600); }
+  function copy(text) {
+    if (!text) return;
+    function done() { toast("コピーしました"); }
+    function fallback() {
+      var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) { toast("コピーできませんでした。長押しで選んでコピーしてください"); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  }
+  $("copy").addEventListener("click", function () { copy(current[0]); });
+  $("pw").addEventListener("click", function () { copy(current[0]); });
+  $("multi").addEventListener("click", function (e) { var b = e.target.closest("[data-i]"); if (b) copy(current[+b.dataset.i]); });
+
+  paintSettings(); render();
+})();
+</script>
+</body>
+</html>
